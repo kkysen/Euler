@@ -10,7 +10,6 @@
 #define NUM_PROBLEMS 599
 
 typedef unsigned char byte;
-typedef signed char sbyte;
 typedef unsigned int uint;
 typedef unsigned long long ull;
 
@@ -51,10 +50,15 @@ void register_solution(Euler *const euler, const uint problem_num, const Solutio
     memcpy(euler->solutions + euler->num_solutions++, &solution, sizeof(Solution));
 }
 
-int solution_cmp(const Solution *s1, const Solution *s2) {
+int solution_cmp(const Solution *const s1, const Solution *const s2) {
     return s1->num - s2->num;
 }
 
+/*
+ * FIXME
+ * I was planning on sorting the solutions based on their problem number,
+ * but qsort messes up the function pointers somehow and causes seg faults.
+ */
 void sort_solutions(Euler *const euler) {
     qsort(euler->solutions, sizeof(Solution), euler->num_solutions, (const void *) solution_cmp);
 }
