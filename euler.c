@@ -63,10 +63,6 @@ void sort_solutions(Euler *const euler) {
     qsort(euler->solutions, sizeof(Solution), euler->num_solutions, (const void *) solution_cmp);
 }
 
-answer_t run_solution(Euler *const euler, const uint index) {
-    return euler->solutions[index].solution();
-}
-
 void run_solutions(Euler *const euler) {
     //sort_solutions(Euler);
     for (uint i = 0; i < euler->num_solutions; i++) {
