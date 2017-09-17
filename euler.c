@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define NUM_PROBLEMS 599
 
@@ -50,7 +51,7 @@ void register_solution(Euler *const euler, const uint problem_num, const Solutio
     memcpy(euler->solutions + euler->num_solutions++, &solution, sizeof(Solution));
 }
 
-int solution_cmp(const Solution *const s1, const Solution *const s2) {
+static inline int solution_cmp(const Solution *const s1, const Solution *const s2) {
     return s1->num - s2->num;
 }
 
@@ -117,7 +118,7 @@ answer_t euler3() {
     return n;
 }
 
-bool is_palindrome(uint i) {
+static inline bool is_palindrome(uint i) {
     uint temp = i;
     uint reversed = 0;
     while (temp) {
@@ -149,7 +150,7 @@ answer_t euler4() {
     }
 }
 
-bool all_divisible(uint i) {
+static inline bool all_divisible(uint i) {
     for (uint j = 1; j <= 20; ++j) {
         if (i % j) {
             return false;
@@ -168,11 +169,11 @@ answer_t euler5() {
     }
 }
 
-uint sum_squares(uint n) {
+static inline uint sum_squares(uint n) {
     return (n * (n + 1) * ((n << 1) + 1)) / 6;
 }
 
-uint square_sums(uint n) {
+static inline uint square_sums(uint n) {
     const uint sum = (n * (n + 1)) >> 1;
     return sum * sum;
 }
@@ -286,7 +287,7 @@ typedef enum DayOfWeek {
     Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 } DayOfWeek;
 
-DayOfWeek day_of_week(const byte d, const Month m, uint y) {
+static inline DayOfWeek day_of_week(const byte d, const Month m, uint y) {
     y -= m < 3;
     return (DayOfWeek) ((y + y / 4 - y / 100 + y / 400 + "-bed=pen+mad."[m] + d) % 7);
 }
@@ -436,6 +437,29 @@ answer_t euler19() {
     return num_sundays_on_first_of_month(start, end);
 }
 
+static inline double integral(double x) {
+    const double t = x - 1;
+    return t - 0.5 * (t * sqrt(1 - t * t) + asin(t));
+}
+
+// Concave Triangle
+answer_t euler587() {
+    const double L_section_area = 1 - M_PI / 4;
+    const double inv_L_section_area = 1 / L_section_area;
+    const double c = 1;
+    const double integral1 = integral(1);
+    for (uint i = 1;; ++i) {
+        const double slope = 1.0 / i;
+        const double a = slope * slope + 1;
+        const double b = -2 * (slope + 1);
+        const double x = (2 * c) / (-b + sqrt(b * b - 4 * a * c)); // reciprocal quadratic formula
+        const double concave_triangle_area = 0.5 * x * (1 - sqrt((-x + 2) * x)) + integral1 - integral(x);
+        if (concave_triangle_area * inv_L_section_area < 0.001) {
+            return i;
+        }
+    }
+}
+
 #define EULER(n, name) register_solution(euler, n, euler##n, name)
 
 void register_solutions(Euler *const euler) {
@@ -453,6 +477,8 @@ void register_solutions(Euler *const euler) {
     EULER(13, "Large Sum");
     
     EULER(19, "Counting Sundays");
+    
+    EULER(587, "Concave Triangle");
 }
 
 int main() {
