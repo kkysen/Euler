@@ -191,18 +191,12 @@ uint gcd(uint a, uint b) {
     if (a == 0 || b == 0) {
         return 0;
     }
-    int shift = 0;
-    for (; ((a | b) & 1) == 0; ++shift) {
-        a >>= 1;
-        b >>= 1;
-    }
-    while ((a & 1) == 0) {
-        a >>= 1;
-    }
+    int shift = __builtin_ctz(a | b);
+    a >>= shift;
+    b >>= shift;
+    a >>= __builtin_ctz(a);
     do {
-        while ((b & 1) == 0) {
-            b >>= 1;
-        }
+        b >>= __builtin_ctz(b);
         if (a > b) {
             a ^= b;
             b ^= a;
@@ -211,6 +205,15 @@ uint gcd(uint a, uint b) {
         b -= a;
     } while (b != 0);
     return a << shift;
+    // normal Euclid GCD algorithm, about 3x slower than
+    // above binary GCD algorithm with CTZ instruction
+//    uint c;
+//    while (a != 0) {
+//        c = a;
+//        a = b % a;
+//        b = c;
+//    }
+//    return b;
 }
 
 uint lcm(const uint a, const uint b) {
@@ -220,7 +223,7 @@ uint lcm(const uint a, const uint b) {
 // optimized
 // Smallest Multiple
 answer_t euler5() {
-    const uint divisible_up_to = 20;
+    const uint divisible_up_to = 20; //20000000; // 20 mil takes 1 sec
     uint all_lcm = 1;
     for (uint i = 1; i < divisible_up_to; ++i) {
         all_lcm = lcm(i, all_lcm);
