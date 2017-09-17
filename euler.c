@@ -76,18 +76,25 @@ char *answer_to_string(answer_t answer) {
     return s;
 }
 
+static inline double elapsed(clock_t start) {
+    return (clock() - start) / (double) CLOCKS_PER_SEC;
+}
+
 void run_solutions(Euler *const euler) {
     //sort_solutions(Euler);
-    for (uint i = 0; i < euler->num_solutions; i++) {
+    const uint num_solutions = euler->num_solutions;
+    clock_t total_start = clock();
+    for (uint i = 0; i < num_solutions; i++) {
         Solution solution = euler->solutions[i];
         clock_t start = clock();
         const answer_t answer = solution.solution();
-        clock_t end = clock();
-        double time = (end - start) / (double) CLOCKS_PER_SEC;
+        double time = elapsed(start);
         const char *const answer_str = answer_to_string(answer);
         printf("Euler #%u: %s: %s (%f sec)\n", solution.num, solution.name, answer_str, time);
         free((char *) answer_str);
     }
+    double total_time = elapsed(total_start);
+    printf("\n%u Euler solutions (%f sec)\n", num_solutions, total_time);
 }
 
 // Multiples of 3 and 5
@@ -161,7 +168,8 @@ answer_t euler4() {
 }
 
 static inline bool all_divisible(uint i) {
-    for (uint j = 1; j <= 20; ++j) {
+    const uint divisible_up_to = 20;
+    for (uint j = 1; j <= divisible_up_to; ++j) {
         if (i % j) {
             return false;
         }
@@ -171,12 +179,53 @@ static inline bool all_divisible(uint i) {
 
 // very slow, TODO optimize
 // Smallest Multiple
-answer_t euler5() {
+answer_t euler5_slow() {
     for (uint i = 1;; ++i) {
         if (all_divisible(i)) {
             return i;
         }
     }
+}
+
+uint gcd(uint a, uint b) {
+    if (a == 0 || b == 0) {
+        return 0;
+    }
+    int shift = 0;
+    for (; ((a | b) & 1) == 0; ++shift) {
+        a >>= 1;
+        b >>= 1;
+    }
+    while ((a & 1) == 0) {
+        a >>= 1;
+    }
+    do {
+        while ((b & 1) == 0) {
+            b >>= 1;
+        }
+        if (a > b) {
+            a ^= b;
+            b ^= a;
+            a ^= b;
+        }
+        b -= a;
+    } while (b != 0);
+    return a << shift;
+}
+
+uint lcm(const uint a, const uint b) {
+    return a / gcd(a, b) * b;
+}
+
+// optimized
+// Smallest Multiple
+answer_t euler5() {
+    const uint divisible_up_to = 20;
+    uint all_lcm = 1;
+    for (uint i = 1; i < divisible_up_to; ++i) {
+        all_lcm = lcm(i, all_lcm);
+    }
+    return all_lcm;
 }
 
 static inline uint sum_squares(uint n) {
