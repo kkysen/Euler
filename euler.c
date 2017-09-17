@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #define NUM_PROBLEMS 599
 
@@ -64,16 +65,28 @@ void sort_solutions(Euler *const euler) {
     qsort(euler->solutions, sizeof(Solution), euler->num_solutions, (const void *) solution_cmp);
 }
 
+char *answer_to_string(answer_t answer) {
+    const uint buffer_len = 20;
+    char *s = (char *) malloc(buffer_len * sizeof(char));
+    if (answer < 0) {
+        strcpy(s, "unfinished or wrong");
+    } else {
+        sprintf(s, "%llu", answer);
+    }
+    return s;
+}
+
 void run_solutions(Euler *const euler) {
     //sort_solutions(Euler);
     for (uint i = 0; i < euler->num_solutions; i++) {
         Solution solution = euler->solutions[i];
+        clock_t start = clock();
         const answer_t answer = solution.solution();
-        if (answer < 0) {
-            printf("Euler #%d: %s: unfinished\n", solution.num, solution.name);
-        } else {
-            printf("Euler #%d: %s: %lld\n", solution.num, solution.name, answer);
-        }
+        clock_t end = clock();
+        double time = (end - start) / (double) CLOCKS_PER_SEC;
+        const char *const answer_str = answer_to_string(answer);
+        printf("Euler #%u: %s: %s (%f sec)\n", solution.num, solution.name, answer_str, time);
+        free((char *) answer_str);
     }
 }
 
@@ -144,10 +157,7 @@ int largest_palindrome_product(uint min, uint max) {
 
 // Largest Palindrome Product
 answer_t euler4() {
-    int answer = largest_palindrome_product(100, 999);
-    if (answer == -1) {
-        return -1;
-    }
+    return largest_palindrome_product(100, 999);
 }
 
 static inline bool all_divisible(uint i) {
@@ -430,6 +440,45 @@ answer_t euler13() {
     return strtoll(first_digits, NULL, 10);
 }
 
+uint collatz_chain_length(uint *const restrict cache, const uint cache_size, const uint n);
+
+static inline uint collatz_chain_length_direct(uint *const restrict cache, const uint cache_size, const uint n) {
+    if (n == 1) {
+        return 1;
+    }
+    const uint next_num = (n & 1) == 1 ? n + (n << 1) + 1 : n >> 1;
+    return collatz_chain_length(cache, cache_size, next_num) + 1;
+}
+
+uint collatz_chain_length(uint *const restrict cache, const uint cache_size, const uint n) {
+    if (n >= cache_size) {
+        return collatz_chain_length_direct(cache, cache_size, n);
+    }
+    //printf("%u\n", n);
+    if (cache[n] == 0) {
+        cache[n] = collatz_chain_length_direct(cache, cache_size, n);
+    }
+    return cache[n];
+}
+
+// Longest Collatz Sequence
+answer_t euler14() {
+    const uint MAX = 1000000;
+    const uint cache_size = MAX;
+    uint *const cache = (uint *const) calloc(cache_size, sizeof(uint));
+    uint max_chain_length = 1;
+    uint max_starting_num = 1;
+    for (uint i = 1; i < MAX; ++i) {
+        //printf("\t%u\n", i);
+        const uint chain_length = collatz_chain_length(cache, cache_size, i);
+        if (chain_length > max_chain_length) {
+            max_chain_length = chain_length;
+            max_starting_num = i;
+        }
+    }
+    return max_starting_num;
+}
+
 // Counting Sundays
 answer_t euler19() {
     Date start = {1, January, 1901};
@@ -475,6 +524,7 @@ void register_solutions(Euler *const euler) {
     EULER(10, "Summation of Primes");
     
     EULER(13, "Large Sum");
+    EULER(14, "Longest Collatz Sequence");
     
     EULER(19, "Counting Sundays");
     
